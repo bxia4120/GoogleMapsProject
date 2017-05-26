@@ -41,14 +41,7 @@ public class MapsActivity extends AppCompatActivity
 
     GoogleMap mMap;
     SupportMapFragment mapFrag;
-    //LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
-    //Location mLastLocation;
-    //Marker mCurrLocationMarker;
-    Button Street;
-    Button Satellite;
-    Button Hybrid;
-    Button Terrain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,18 +53,20 @@ public class MapsActivity extends AppCompatActivity
         mapFrag = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFrag.getMapAsync(this);
-
-        Street = (Button) findViewById(R.id.streetbutton);
-        Satellite = (Button) findViewById(R.id.satellitebutton);
-        Hybrid = (Button) findViewById(R.id.hybridbutton);
-        Terrain = (Button) findViewById(R.id.terrainbutton);
     }
 
-    /*public void setMapType(View v) {
-        switch (R.Id()) {
+    public void onClick(View v) {
+        switch(v.getId()){
             case R.id.streetbutton:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL); break;
+            case R.id.satellitebutton:
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE); break;
+            case R.id.hybridbutton:
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID); break;
+            case R.id.terrainbutton:
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN); break;
         }
-    }*/
+    }
 
     @Override
     public void onPause() {
@@ -85,7 +80,6 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        //mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
 
         LatLng birthcity = new LatLng(40.8682, -73.4257);
         mMap.addMarker(new MarkerOptions().position(birthcity).title("Born here"));
@@ -170,34 +164,10 @@ public class MapsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLocationChanged(Location location) {
-        /*mLastLocation = location;
-        if (mCurrLocationMarker != null) {
-            mCurrLocationMarker.remove();
-        }
-
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("Current Position");
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-        mCurrLocationMarker = mMap.addMarker(markerOptions);
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,11));*/
-    }
+    public void onLocationChanged(Location location) {  }
 
     @Override
-    public void onConnected(Bundle bundle) {
-        /*mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(1000);
-        mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, MapsActivity.this);
-        }*/
-    }
+    public void onConnected(Bundle bundle) {}
 
     @Override
     public void onConnectionSuspended(int i) {}
