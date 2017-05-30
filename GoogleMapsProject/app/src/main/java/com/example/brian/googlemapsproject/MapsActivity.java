@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -175,4 +177,43 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {}
 
+    private LocationManager locationManager;
+    private boolean isGPSenabled = false;
+    private boolean isNetworkEnabled = false;
+    private boolean canGetLocation = false;
+    private static final long MIN_TIME_BW_UPDATES = 1000*15*1;
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 5;
+
+    public void getLocation () {
+        try{
+            locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+            isGPSenabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            if (isGPSenabled) Log.d("MyMaps", "getLocation: GPS is enabled");
+
+            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            if (isNetworkEnabled) Log.d("MyMaps", "getLocation: Network is enabled");
+
+            if (!isGPSenabled && !isNetworkEnabled) {
+                Log.d("MyMaps", "getLocation: No provider is enabled");
+            } else {
+                this.canGetLocation = true;
+
+                if (isNetworkEnabled) {
+                    Log.d("MyMaps", "getLocation: Network enabled, requesting location updates");
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                            locationListenerNetwork);
+
+                    Log.d("MyMaps", "getLocation: getLocation update request succcessful");
+                    Toast.makeText(this, "Using Network", Toast.LENGTH_SHORT);
+                }
+            }
+        }
+        catch (Exception e) {
+            Log.d("MyMaps", "caught Exception in getLocation");
+            e.printStackTrace();
+        }
+    }
 }
