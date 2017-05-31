@@ -2,7 +2,10 @@ package com.example.brian.googlemapsproject;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -17,11 +20,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -33,6 +41,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationListener;
 
+import java.util.List;
+
+import static android.R.attr.data;
+import static com.example.brian.googlemapsproject.R.id.editsearch;
 import static com.example.brian.googlemapsproject.R.id.satellitebutton;
 
 public class MapsActivity extends AppCompatActivity
@@ -44,6 +56,9 @@ public class MapsActivity extends AppCompatActivity
     GoogleMap mMap;
     SupportMapFragment mapFrag;
     GoogleApiClient mGoogleApiClient;
+    EditText editsearch;
+    MarkerOptions markerOptions;
+    EditText locationTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,19 +70,62 @@ public class MapsActivity extends AppCompatActivity
         mapFrag = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFrag.getMapAsync(this);
+
+        editsearch = (EditText)(findViewById(R.id.editsearch));
     }
 
     public void onClick(View v) {
-        switch(v.getId()){
+        switch(v.getId()) {
             case R.id.streetbutton:
-                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL); break;
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                break;
             case R.id.satellitebutton:
-                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE); break;
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                break;
             case R.id.hybridbutton:
-                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID); break;
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                break;
             case R.id.terrainbutton:
-                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN); break;
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                break;
+            case R.id.searchbutton:
+                String search = editsearch.getText().toString();
+                Geocoder geocoder = new Geocoder(getBaseContext());
+                List<Address> addresses = null;
+
+                try {
+                    addresses = geocoder.getFromLocationName(search, 3);
+                    if (addresses != null && !addresses.equals(""))
+                        search(addresses);
+
+                } catch (Exception e) {
+                    Log.d("myMaps", "Search function failed");
+                }
         }
+    }
+
+    protected void search(List<Address> addresses) {
+
+        Address address = addresses.get(0);
+        LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+
+        String addressText = String.format(
+                "%s, %s",
+                address.getMaxAddressLineIndex() > 0 ? address
+                        .getAddressLine(0) : "", address.getCountryName());
+
+        markerOptions = new MarkerOptions();
+
+        markerOptions.position(latLng);
+        markerOptions.title(addressText);
+
+        mMap.addMarker(markerOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+        locationTv.setText("Latitude:" + address.getLatitude() + ", Longitude:"
+                + address.getLongitude());
+
+
     }
 
     @Override
@@ -177,7 +235,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {}
 
-    private LocationManager locationManager;
+    /*private LocationManager locationManager;
     private boolean isGPSenabled = false;
     private boolean isNetworkEnabled = false;
     private boolean canGetLocation = false;
@@ -216,4 +274,27 @@ public class MapsActivity extends AppCompatActivity
             e.printStackTrace();
         }
     }
+
+    android.location.LocationListener locationListenerGPS = new android.location.LocationListener() {
+
+        @Override
+        public void onLocationChanged(Location location) {
+
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+
+        }
+    }*/
 }
