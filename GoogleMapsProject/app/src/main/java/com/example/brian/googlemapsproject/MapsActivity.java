@@ -47,6 +47,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationListener;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 
 public class MapsActivity extends AppCompatActivity
@@ -61,6 +65,7 @@ public class MapsActivity extends AppCompatActivity
     MarkerOptions markerOptions;
     EditText locationTv;
     int PLACE_PICKER_REQUEST = 1020;
+    int numTrack = 1399;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +73,13 @@ public class MapsActivity extends AppCompatActivity
         setContentView(R.layout.activity_maps);
 
         getSupportActionBar().setTitle("Google Maps Project");
+
+        userIcon = R.drawable.yellow_point;
+        foodIcon = R.drawable.red_point;
+        drinkIcon = R.drawable.blue_point;
+        shopIcon = R.drawable.green_point;
+        otherIcon = R.drawable.purple_point;
+        placeMarkers = new Marker[MAX_PLACES];
 
         mapFrag = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -89,7 +101,16 @@ public class MapsActivity extends AppCompatActivity
                 mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
                 break;
             case R.id.Tracker:
+                numTrack++;
+                if(numTrack%2==0) {
+                    Log.d("MyMaps", "Tracking On");
+                    Toast.makeText(MapsActivity.this, "Tracknig On", Toast.LENGTH_SHORT)
+                }
                 getLocation();
+                break;
+            case R.id.Clear:
+                mMap.clear();
+                break;
         }
     }
 
@@ -379,4 +400,78 @@ public class MapsActivity extends AppCompatActivity
         public void onProviderDisabled(String provider) {
         }
     };
+
+    private Marker[] placeMarkers;
+    private final int MAX_PLACES = 20;
+    private MarkerOptions[] places;
+
+    public void onPostExecute(String result) {
+        if(placeMarkers!=null){
+            for(int i=0; i<placeMarkers.length; i++){
+                if(placeMarkers[i]!=null)
+                    placeMarkers[i].remove();
+            }
+        }
+
+        try {
+            JSONObject resultObject = new JSONObject(result);
+            JSONArray placesArray = resultObject.getJSONArray("results");
+            places = new MarkerOptions[placesArray.length()];
+            for (int p=0; p<placesArray.length(); p++) {
+                boolean missingValue = false;
+                LatLng placeLL=null;
+                String placeName="";
+                String vicinity="";
+                int currIcon = otherIcon;
+                try{
+                    missingValue = false;
+                    JSONObject placeObject = placesArray.getJSONObject(p);
+                    JSONObject loc = placeObject.getJSONObject("geometry").getJSONObject("location");
+                    placeLL = new LatLng(
+                            Double.valueOf(loc.getString("lat")),
+                            Double.valueOf(loc.getString("lng")));
+                    JSONArray types = placeObject.getJSONArray("types");
+                    for(int t=0; t<types.length(); t++){
+                        String thisType=types.get(t).toString();
+                        if(thisType.contains("food")){
+                            currIcon = foodIcon;
+                            break;
+                        }
+                        else if(thisType.contains("bar")){
+                            currIcon = drinkIcon;
+                            break;
+                        }
+                        else if(thisType.contains("store")){
+                            currIcon = shopIcon;
+                            break;
+                        }
+                    }
+                    vicinity = placeObject.getString("vicinity");
+                    placeName = placeObject.getString("name");
+                }
+                catch(JSONException jse){
+                    missingValue=true;
+                    if(missingValue)    places[p]=null;
+                    else
+                        places[p]=new MarkerOptions()
+                                .position(placeLL)
+                                .title(placeName)
+                                .icon(BitmapDescriptorFactory.fromResource(currIcon))
+                                .snippet(vicinity);
+                    jse.printStackTrace();
+                }
+            }
+        }
+        catch (Exception e) {
+            missingValue = true;
+            e.printStackTrace();
+        }
+        if(places!=null && placeMarkers!=null){
+            for(int p=0; p<places.length && p<placeMarkers.length; p++){
+                if(places[p]!=null)
+                    placeMarkers[p]=mMap.addMarker(places[p]);
+            }
+        }
+        new GetPlaces().execute(placesSearchStr);
+    }
 }

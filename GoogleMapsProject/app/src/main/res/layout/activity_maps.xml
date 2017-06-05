@@ -19,11 +19,10 @@
         android:layout_alignParentBottom="true"/>
     <Button
         android:id="@+id/PlacePicker"
-        android:onClick="openPlacePicker"
+        android:onClick="onPostExecute"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Search"/>
-
     <Button
         android:id="@+id/Tracker"
         android:onClick="onClick"
@@ -32,6 +31,14 @@
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@+id/PlacePicker"
         android:text="Tracker" />
+    <Button
+        android:id="@+id/Clear"
+        android:onClick="onClick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/Tracker"
+        android:text="Clear" />
     <LinearLayout android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
