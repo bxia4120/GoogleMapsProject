@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -62,6 +63,7 @@ public class MapsActivity extends AppCompatActivity
     GoogleMap mMap;
     SupportMapFragment mapFrag;
     GoogleApiClient mGoogleApiClient;
+    EditText editSearch;
     MarkerOptions markerOptions;
     EditText locationTv;
     int PLACE_PICKER_REQUEST = 1020;
@@ -74,16 +76,13 @@ public class MapsActivity extends AppCompatActivity
 
         getSupportActionBar().setTitle("Google Maps Project");
 
-        userIcon = R.drawable.yellow_point;
-        foodIcon = R.drawable.red_point;
-        drinkIcon = R.drawable.blue_point;
-        shopIcon = R.drawable.green_point;
-        otherIcon = R.drawable.purple_point;
-        placeMarkers = new Marker[MAX_PLACES];
+        //placeMarkers = new Marker[MAX_PLACES];
 
         mapFrag = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFrag.getMapAsync(this);
+
+        editSearch = (EditText)(findViewById(R.id.editSearch));
     }
 
     public void onClick(View v) {
@@ -104,14 +103,53 @@ public class MapsActivity extends AppCompatActivity
                 numTrack++;
                 if(numTrack%2==0) {
                     Log.d("MyMaps", "Tracking On");
-                    Toast.makeText(MapsActivity.this, "Tracknig On", Toast.LENGTH_SHORT)
+                    Toast.makeText(MapsActivity.this, "Tracking On", Toast.LENGTH_SHORT).show();
+                    getLocation();
                 }
-                getLocation();
+                else{
+                    Log.d("MyMaps", "Tracking Off");
+                    Toast.makeText(MapsActivity.this, "Tracking Off", Toast.LENGTH_SHORT).show();
+                    locationManager.removeUpdates(locationListenerNetwork);
+                }
                 break;
             case R.id.Clear:
                 mMap.clear();
                 break;
+            case R.id.Search:
+                String search = editSearch.getText().toString();
+                Geocoder geocoder = new Geocoder(getBaseContext());
+                List<Address> addresses = null;
+
+                try {
+                    addresses = geocoder.getFromLocationName(search, 3);
+                    if (addresses != null && !addresses.equals(""))
+                    search(addresses);
+                }
+                catch (Exception e) {
+                    Log.d("myMaps", "Search function failed");
+                }
         }
+    }
+
+    protected void search(List<Address> addresses) {
+        Address address = addresses.get(0);
+        LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+
+        String addressText = String.format(
+             "%s, %s",
+             address.getMaxAddressLineIndex() > 0 ? address
+             .getAddressLine(0) : "", address.getCountryName());
+
+        markerOptions = new MarkerOptions();
+
+        markerOptions.position(latLng);
+        markerOptions.title(addressText);
+
+        mMap.addMarker(markerOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(18));
+        locationTv.setText("Latitude:" + address.getLatitude() + ", Longitude:" +
+                            address.getLongitude());
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -292,7 +330,7 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private Location myLocation;
-    private static final int MY_LOC_ZOOM_FACTOR = 40;
+    private static final int MY_LOC_ZOOM_FACTOR = 18;
 
 
     android.location.LocationListener locationListenerGPS = new android.location.LocationListener() {
@@ -401,7 +439,7 @@ public class MapsActivity extends AppCompatActivity
         }
     };
 
-    private Marker[] placeMarkers;
+    /*private Marker[] placeMarkers;
     private final int MAX_PLACES = 20;
     private MarkerOptions[] places;
 
@@ -473,5 +511,5 @@ public class MapsActivity extends AppCompatActivity
             }
         }
         new GetPlaces().execute(placesSearchStr);
-    }
+    }*/
 }
