@@ -1,29 +1,23 @@
 package com.example.brian.googlemapsproject;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -31,7 +25,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdate;
@@ -39,7 +32,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -47,10 +39,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationListener;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.List;
 
@@ -185,7 +173,7 @@ public class MapsActivity extends AppCompatActivity
                 buildGoogleApiClient();
                 mMap.setMyLocationEnabled(true);
             } else {
-                checkLocationPermission();
+                //checkLocationPermission();
             }
         } else {
             buildGoogleApiClient();
@@ -204,7 +192,7 @@ public class MapsActivity extends AppCompatActivity
         }
     }
 
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    /*public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -257,7 +245,7 @@ public class MapsActivity extends AppCompatActivity
                 return;
             }
         }
-    }
+    }*/
 
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -289,7 +277,6 @@ public class MapsActivity extends AppCompatActivity
     private boolean isNetworkEnabled = false;
     private boolean canGetLocation = false;
     Location mLastLocation;
-    Marker mCurrLocationMarker;
     private static final long MIN_TIME_BW_UPDATES = 1000 * 15 * 1;
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 5;
 
@@ -308,6 +295,20 @@ public class MapsActivity extends AppCompatActivity
             } else {
                 this.canGetLocation = true;
 
+                if (isGPSenabled) {
+                    Log.d("MyMaps", "getLocation: GPS enabled, requesting location updates");
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                            locationListenerNetwork);
+
+                    Log.d("MyMaps", "getLocation: GPS update request succcessful");
+                    Toast.makeText(MapsActivity.this, "Using Network", Toast.LENGTH_SHORT).show();
+                }
+
                 if (isNetworkEnabled) {
                     Log.d("MyMaps", "getLocation: Network enabled, requesting location updates");
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -318,8 +319,8 @@ public class MapsActivity extends AppCompatActivity
                             MIN_DISTANCE_CHANGE_FOR_UPDATES,
                             locationListenerNetwork);
 
-                    Log.d("MyMaps", "getLocation: getLocation update request succcessful");
-                    Toast.makeText(this, "Using Network", Toast.LENGTH_SHORT);
+                    Log.d("MyMaps", "getLocation: Network update request succcessful");
+                    Toast.makeText(MapsActivity.this, "Using Network", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -348,19 +349,17 @@ public class MapsActivity extends AppCompatActivity
             Toast.makeText(MapsActivity.this, "GPS Enabled", Toast.LENGTH_SHORT).show();
 
             switch (status) {
-                case 1:
-                    status = LocationProvider.AVAILABLE;
+                case LocationProvider.AVAILABLE:
                     Log.d("MyMaps", "Location Provider Available");
                     Toast.makeText(MapsActivity.this, "Location Provider Available", Toast.LENGTH_SHORT).show();
                     break;
-                case 2:
-                    status = LocationProvider.OUT_OF_SERVICE;
+                case LocationProvider.OUT_OF_SERVICE:
                     if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         return;
                     }
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, locationListenerGPS);
                     break;
-                case 3:  status = LocationProvider.TEMPORARILY_UNAVAILABLE;
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
                     if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         return;
                     }
@@ -405,11 +404,11 @@ public class MapsActivity extends AppCompatActivity
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, MY_LOC_ZOOM_FACTOR);
 
             if (provider == LocationManager.GPS_PROVIDER){
-                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.RED).strokeWidth(2).fillColor(Color.RED));
+                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.BLUE).strokeWidth(2).fillColor(Color.RED));
             }
 
             if (provider == LocationManager.NETWORK_PROVIDER){
-                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.BLUE).strokeWidth(2).fillColor(Color.BLUE));
+                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.RED).strokeWidth(2).fillColor(Color.BLUE));
             }
             mMap.animateCamera(update);
         }
