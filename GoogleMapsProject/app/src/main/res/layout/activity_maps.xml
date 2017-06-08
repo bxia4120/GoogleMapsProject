@@ -23,12 +23,12 @@
         android:layout_marginTop="4dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="#FF0000"
         android:text="Search"/>
     <EditText
         android:id="@+id/editSearch"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
-        android:layout_marginEnd="4dp"
         android:layout_toEndOf="@+id/Search"
         android:layout_marginTop="9dp"
         android:ems="10"
@@ -43,6 +43,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Tracker"
+        android:textColor="#FFA500"
         android:layout_above="@+id/linearLayout"
         android:layout_alignParentStart="true" />
     <Button
@@ -51,6 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Clear"
+        android:textColor="#FFFF00"
         android:layout_above="@+id/linearLayout"
         android:layout_toEndOf="@+id/Tracker" />
     <LinearLayout android:layout_width="fill_parent"
@@ -65,6 +67,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="#00FF00"
             android:text="Street"/>
 
         <Button
@@ -73,6 +76,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="#0000FF"
             android:text="Satellite" />
 
         <Button
@@ -81,6 +85,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="#7647A2"
             android:text="Hybrid" />
 
         <Button
@@ -89,6 +94,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="#4C177D"
             android:text="Terrain" />
     </LinearLayout>
 </RelativeLayout>

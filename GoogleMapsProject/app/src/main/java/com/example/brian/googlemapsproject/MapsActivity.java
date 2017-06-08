@@ -1,30 +1,25 @@
 package com.example.brian.googlemapsproject;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
-import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdate;
@@ -35,22 +30,15 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationListener;
 
 import java.util.List;
 
 public class MapsActivity extends AppCompatActivity
-        implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        implements OnMapReadyCallback {
 
     GoogleMap mMap;
     SupportMapFragment mapFrag;
-    GoogleApiClient mGoogleApiClient;
     EditText editSearch;
     MarkerOptions markerOptions;
     EditText locationTv;
@@ -64,7 +52,6 @@ public class MapsActivity extends AppCompatActivity
 
         getSupportActionBar().setTitle("Google Maps Project");
 
-        //placeMarkers = new Marker[MAX_PLACES];
 
         mapFrag = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -98,6 +85,7 @@ public class MapsActivity extends AppCompatActivity
                     Log.d("MyMaps", "Tracking Off");
                     Toast.makeText(MapsActivity.this, "Tracking Off", Toast.LENGTH_SHORT).show();
                     locationManager.removeUpdates(locationListenerNetwork);
+                    locationManager.removeUpdates(locationListenerGPS);
                 }
                 break;
             case R.id.Clear:
@@ -151,132 +139,17 @@ public class MapsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-
-        if (mGoogleApiClient != null) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }
-    }
-
-    @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
         LatLng birthcity = new LatLng(40.8682, -73.4257);
         mMap.addMarker(new MarkerOptions().position(birthcity).title("Born here"));
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                buildGoogleApiClient();
-                mMap.setMyLocationEnabled(true);
-            } else {
-                //checkLocationPermission();
-            }
-        } else {
-            buildGoogleApiClient();
-            mMap.setMyLocationEnabled(true);
-        }
-    }
-
-    public void openPlacePicker(View v) {
-        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-        try {
-            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
-        } catch (GooglePlayServicesRepairableException e) {
-            e.printStackTrace();
-        } catch (GooglePlayServicesNotAvailableException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /*public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
-
-    private void checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                new AlertDialog.Builder(this)
-                        .setTitle("Location Permission Needed")
-                        .setMessage("This app needs the Location permission, please accept to use location functionality")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                ActivityCompat.requestPermissions(MapsActivity.this,
-                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                        MY_PERMISSIONS_REQUEST_LOCATION);
-                            }
-                        })
-                        .create()
-                        .show();
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_LOCATION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(this,
-                            Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED) {
-
-                        if (mGoogleApiClient == null) {
-                            buildGoogleApiClient();
-                        }
-                        mMap.setMyLocationEnabled(true);
-                    }
-
-                } else {
-                    Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
-                }
-                return;
-            }
-        }
-    }*/
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
     }
 
     private LocationManager locationManager;
     private boolean isGPSenabled = false;
     private boolean isNetworkEnabled = false;
     private boolean canGetLocation = false;
-    Location mLastLocation;
     private static final long MIN_TIME_BW_UPDATES = 1000 * 15 * 1;
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 5;
 
@@ -303,10 +176,10 @@ public class MapsActivity extends AppCompatActivity
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                            locationListenerNetwork);
+                            locationListenerGPS);
 
                     Log.d("MyMaps", "getLocation: GPS update request succcessful");
-                    Toast.makeText(MapsActivity.this, "Using Network", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MapsActivity.this, "Using GPS", Toast.LENGTH_SHORT).show();
                 }
 
                 if (isNetworkEnabled) {
@@ -320,7 +193,7 @@ public class MapsActivity extends AppCompatActivity
                             locationListenerNetwork);
 
                     Log.d("MyMaps", "getLocation: Network update request succcessful");
-                    Toast.makeText(MapsActivity.this, "Using Network", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MapsActivity.this, "Using Network", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -333,8 +206,7 @@ public class MapsActivity extends AppCompatActivity
     private Location myLocation;
     private static final int MY_LOC_ZOOM_FACTOR = 18;
 
-
-    android.location.LocationListener locationListenerGPS = new android.location.LocationListener() {
+    LocationListener locationListenerGPS = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
             Log.d("MyMaps", "GPS Enabled");
@@ -383,7 +255,29 @@ public class MapsActivity extends AppCompatActivity
         }
     };
 
-    private void dropMarker(String provider) {
+    LocationListener locationListenerNetwork = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.d("MyMaps", "Network Enabled");
+            Toast.makeText(MapsActivity.this,"Network Enabled", Toast.LENGTH_SHORT).show();
+
+            dropMarker(LocationManager.NETWORK_PROVIDER);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+        }
+    };
+
+    public void dropMarker(String provider) {
         LatLng userLocation = null;
 
         if (locationManager != null) {
@@ -399,44 +293,20 @@ public class MapsActivity extends AppCompatActivity
         } else {
             userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
-            Toast.makeText(MapsActivity.this, "" + myLocation.getLatitude() + ", " +myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MapsActivity.this, "" + myLocation.getLatitude() + ", " +myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
 
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, MY_LOC_ZOOM_FACTOR);
 
-            if (provider == LocationManager.GPS_PROVIDER){
-                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.BLUE).strokeWidth(2).fillColor(Color.RED));
+            if (provider.equals(LocationManager.GPS_PROVIDER)){
+                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.BLUE).strokeWidth(2).fillColor(Color.BLUE));
             }
 
-            if (provider == LocationManager.NETWORK_PROVIDER){
-                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.RED).strokeWidth(2).fillColor(Color.BLUE));
+            if (provider.equals(LocationManager.NETWORK_PROVIDER)){
+                Circle myCircle = mMap.addCircle(new CircleOptions().center(userLocation).radius(1).strokeColor(Color.RED).strokeWidth(2).fillColor(Color.RED));
             }
             mMap.animateCamera(update);
         }
     }
-
-    android.location.LocationListener locationListenerNetwork = new android.location.LocationListener() {
-        @Override
-        public void onLocationChanged(Location location) {
-            Log.d("MyMaps", "Network Enabled");
-            Toast.makeText(MapsActivity.this,"Network Enabled", Toast.LENGTH_SHORT).show();
-
-            dropMarker(LocationManager.NETWORK_PROVIDER);
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            Log.d("MyMaps", "Network Enabled");
-            Toast.makeText(MapsActivity.this,"Network Enabled", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-        }
-    };
 
     /*private Marker[] placeMarkers;
     private final int MAX_PLACES = 20;
