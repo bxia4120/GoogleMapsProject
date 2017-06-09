@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -32,6 +33,7 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
 import java.util.List;
 
 public class MapsActivity extends AppCompatActivity
@@ -39,10 +41,10 @@ public class MapsActivity extends AppCompatActivity
 
     GoogleMap mMap;
     SupportMapFragment mapFrag;
-    EditText editSearch;
+    Button Search;
     MarkerOptions markerOptions;
     EditText locationTv;
-    int PLACE_PICKER_REQUEST = 1020;
+    int PLACE_PICKER_REQUEST = 1;
     int numTrack = 1399;
 
     @Override
@@ -57,7 +59,33 @@ public class MapsActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFrag.getMapAsync(this);
 
-        editSearch = (EditText)(findViewById(R.id.editSearch));
+        Search = (Button)(findViewById(R.id.Search));
+        Search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+
+                Intent intent;
+                try {
+                    intent = builder.build(MapsActivity.this);
+                    startActivityForResult(intent, PLACE_PICKER_REQUEST);
+                } catch (GooglePlayServicesRepairableException e) {
+                    e.printStackTrace();
+                } catch (GooglePlayServicesNotAvailableException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode==PLACE_PICKER_REQUEST) {
+            if (resultCode==RESULT_OK) {
+                Place place = PlacePicker.getPlace(this, data);
+                String address = String.format("%s", place.getAddress());
+                search(address);
+            }
+        }
     }
 
     public void onClick(View v) {
@@ -91,50 +119,25 @@ public class MapsActivity extends AppCompatActivity
             case R.id.Clear:
                 mMap.clear();
                 break;
-            case R.id.Search:
-                String search = editSearch.getText().toString();
-                Geocoder geocoder = new Geocoder(getBaseContext());
-                List<Address> addresses = null;
-
-                try {
-                    addresses = geocoder.getFromLocationName(search, 3);
-                    if (addresses != null && !addresses.equals(""))
-                    search(addresses);
-                }
-                catch (Exception e) {
-                    Log.d("myMaps", "Search function failed");
-                }
         }
     }
 
-    protected void search(List<Address> addresses) {
-        Address address = addresses.get(0);
-        LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+    protected void search(String address) {
+        Geocoder geocoder = new Geocoder(getBaseContext());
+        List<Address> addresses;
+        try {
+            addresses = geocoder.getFromLocationName(address, 1);
+            LatLng latLng = new LatLng(addresses.get(0).getLatitude(), addresses.get(0).getLongitude());
+            markerOptions = new MarkerOptions();
 
-        String addressText = String.format(
-             "%s, %s",
-             address.getMaxAddressLineIndex() > 0 ? address
-             .getAddressLine(0) : "", address.getCountryName());
+            markerOptions.position(latLng);
+            markerOptions.title(address);
 
-        markerOptions = new MarkerOptions();
-
-        markerOptions.position(latLng);
-        markerOptions.title(addressText);
-
-        mMap.addMarker(markerOptions);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(18));
-        locationTv.setText("Latitude:" + address.getLatitude() + ", Longitude:" +
-                            address.getLongitude());
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PLACE_PICKER_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                Place place = PlacePicker.getPlace(this, data);
-                String toastMsg = String.format("Place: %s", place.getName());
-                Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
-            }
+            mMap.addMarker(markerOptions);
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(18));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
