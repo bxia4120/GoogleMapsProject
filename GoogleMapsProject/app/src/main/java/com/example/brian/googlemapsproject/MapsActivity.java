@@ -43,7 +43,6 @@ public class MapsActivity extends AppCompatActivity
     SupportMapFragment mapFrag;
     Button Search;
     MarkerOptions markerOptions;
-    EditText locationTv;
     int PLACE_PICKER_REQUEST = 1;
     int numTrack = 1399;
 
@@ -182,7 +181,6 @@ public class MapsActivity extends AppCompatActivity
                             locationListenerGPS);
 
                     Log.d("MyMaps", "getLocation: GPS update request succcessful");
-                    //Toast.makeText(MapsActivity.this, "Using GPS", Toast.LENGTH_SHORT).show();
                 }
 
                 if (isNetworkEnabled) {
@@ -196,7 +194,6 @@ public class MapsActivity extends AppCompatActivity
                             locationListenerNetwork);
 
                     Log.d("MyMaps", "getLocation: Network update request succcessful");
-                    //Toast.makeText(MapsActivity.this, "Using Network", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -296,8 +293,6 @@ public class MapsActivity extends AppCompatActivity
         } else {
             userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
-            //Toast.makeText(MapsActivity.this, "" + myLocation.getLatitude() + ", " +myLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, MY_LOC_ZOOM_FACTOR);
 
             if (provider.equals(LocationManager.GPS_PROVIDER)){
@@ -310,78 +305,4 @@ public class MapsActivity extends AppCompatActivity
             mMap.animateCamera(update);
         }
     }
-
-    /*private Marker[] placeMarkers;
-    private final int MAX_PLACES = 20;
-    private MarkerOptions[] places;
-
-    public void onPostExecute(String result) {
-        if(placeMarkers!=null){
-            for(int i=0; i<placeMarkers.length; i++){
-                if(placeMarkers[i]!=null)
-                    placeMarkers[i].remove();
-            }
-        }
-
-        try {
-            JSONObject resultObject = new JSONObject(result);
-            JSONArray placesArray = resultObject.getJSONArray("results");
-            places = new MarkerOptions[placesArray.length()];
-            for (int p=0; p<placesArray.length(); p++) {
-                boolean missingValue = false;
-                LatLng placeLL=null;
-                String placeName="";
-                String vicinity="";
-                int currIcon = otherIcon;
-                try{
-                    missingValue = false;
-                    JSONObject placeObject = placesArray.getJSONObject(p);
-                    JSONObject loc = placeObject.getJSONObject("geometry").getJSONObject("location");
-                    placeLL = new LatLng(
-                            Double.valueOf(loc.getString("lat")),
-                            Double.valueOf(loc.getString("lng")));
-                    JSONArray types = placeObject.getJSONArray("types");
-                    for(int t=0; t<types.length(); t++){
-                        String thisType=types.get(t).toString();
-                        if(thisType.contains("food")){
-                            currIcon = foodIcon;
-                            break;
-                        }
-                        else if(thisType.contains("bar")){
-                            currIcon = drinkIcon;
-                            break;
-                        }
-                        else if(thisType.contains("store")){
-                            currIcon = shopIcon;
-                            break;
-                        }
-                    }
-                    vicinity = placeObject.getString("vicinity");
-                    placeName = placeObject.getString("name");
-                }
-                catch(JSONException jse){
-                    missingValue=true;
-                    if(missingValue)    places[p]=null;
-                    else
-                        places[p]=new MarkerOptions()
-                                .position(placeLL)
-                                .title(placeName)
-                                .icon(BitmapDescriptorFactory.fromResource(currIcon))
-                                .snippet(vicinity);
-                    jse.printStackTrace();
-                }
-            }
-        }
-        catch (Exception e) {
-            missingValue = true;
-            e.printStackTrace();
-        }
-        if(places!=null && placeMarkers!=null){
-            for(int p=0; p<places.length && p<placeMarkers.length; p++){
-                if(places[p]!=null)
-                    placeMarkers[p]=mMap.addMarker(places[p]);
-            }
-        }
-        new GetPlaces().execute(placesSearchStr);
-    }*/
 }
